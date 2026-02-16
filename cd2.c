@@ -1,5 +1,3 @@
-// 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,28 +19,36 @@ int iskeyword(char buffer[]) {
 }
 
 int main() {
-    char ch, buffer[15], operators[] = "+ - * / % =";
+    char ch, buffer[15], operators[] = "+-*/%="; // Removed spaces from operator string
     FILE *fp;
     int i, j = 0;
-   fp = fopen("aprogram.txt", "r");
+    
+    fp = fopen("aprogram.txt", "r");
     if (fp == NULL) {
         printf("Error while opening the file\n");
         exit(0);
     }
 
-    while ((ch = fgetc(fp)) != EOF) {
+    // Use int for ch to properly handle EOF
+    int c; 
+    while ((c = fgetc(fp)) != EOF) {
+        ch = (char)c;
 
-        /* check operators */
+        // 1. Check if it's an operator
         for (i = 0; i < 6; i++) {
-            if (ch == operators[i])
+            if (ch == operators[i]) {
                 printf("%c is operator\n", ch);
+            }
         }
 
-        /* build identifier / keyword */
+        // 2. Build identifier / keyword
         if (isalnum(ch)) {
-            buffer[j++] = ch;
-        }
-        else if ((ch == ' ' || ch == '\n') && j != 0) {
+            if (j < 14) { // Prevent overflow
+                buffer[j++] = ch;
+            }
+        } 
+        // 3. If delimiter (space, newline, or operator), process the buffer
+        else if ((isspace(ch) || strchr(operators, ch)) && (j != 0)) {
             buffer[j] = '\0';
             j = 0;
 
@@ -51,6 +57,15 @@ int main() {
             else
                 printf("%s is identifier\n", buffer);
         }
+    }
+
+    // Handle the very last token if the file doesn't end in a space/newline
+    if (j > 0) {
+        buffer[j] = '\0';
+        if (iskeyword(buffer))
+            printf("%s is keyword\n", buffer);
+        else
+            printf("%s is identifier\n", buffer);
     }
 
     fclose(fp);
